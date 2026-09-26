@@ -15,6 +15,137 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/api/v1/auth/register": {
+            "post": {
+                "description": "通过用户名、邮箱和密码注册新账号",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "用户注册",
+                "parameters": [
+                    {
+                        "description": "注册信息",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.RegisterRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "注册成功，返回用户信息",
+                        "schema": {
+                            "$ref": "#/definitions/model.User"
+                        }
+                    },
+                    "400": {
+                        "description": "参数验证失败或邮箱已被注册",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "密码加密异常等服务器错误",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/boards": {
+            "post": {
+                "description": "输入标题和所属用户ID创建新白板",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Boards"
+                ],
+                "summary": "创建新白板",
+                "parameters": [
+                    {
+                        "description": "白板创建参数",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateBoardRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "创建成功，返回新白板信息",
+                        "schema": {
+                            "$ref": "#/definitions/model.Board"
+                        }
+                    },
+                    "400": {
+                        "description": "参数验证失败",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "数据库创建失败",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/boards/{id}": {
+            "get": {
+                "description": "根据白板ID查询白板的基础信息、所有节点及节点间的连线",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Boards"
+                ],
+                "summary": "获取白板详情",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "example": "\"board_abc123\"",
+                        "description": "白板 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "获取成功",
+                        "schema": {
+                            "$ref": "#/definitions/dto.BoardDetailResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "白板不存在",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/ping": {
             "get": {
                 "description": "用于检测服务健康状态",
@@ -38,6 +169,174 @@ const docTemplate = `{
                             }
                         }
                     }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "dto.BoardDetailResponse": {
+            "type": "object",
+            "properties": {
+                "board": {
+                    "$ref": "#/definitions/model.Board"
+                },
+                "connections": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.BoardConnection"
+                    }
+                },
+                "nodes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.BoardNode"
+                    }
+                }
+            }
+        },
+        "dto.CreateBoardRequest": {
+            "type": "object",
+            "required": [
+                "title",
+                "userId"
+            ],
+            "properties": {
+                "title": {
+                    "type": "string",
+                    "example": "示例白板"
+                },
+                "userId": {
+                    "type": "string",
+                    "example": "user"
+                }
+            }
+        },
+        "dto.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string",
+                    "example": "请求出错"
+                }
+            }
+        },
+        "dto.RegisterRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "password",
+                "username"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "user@example.com"
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 6,
+                    "example": "123456"
+                },
+                "username": {
+                    "type": "string",
+                    "example": "user"
+                }
+            }
+        },
+        "model.Board": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "userId": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.BoardConnection": {
+            "type": "object",
+            "properties": {
+                "boardId": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "sourceId": {
+                    "type": "string"
+                },
+                "sourcePort": {
+                    "description": "top, bottom, left, right, center",
+                    "type": "string"
+                },
+                "style": {
+                    "description": "箭头样式、粗细等 JSON 字符串",
+                    "type": "string"
+                },
+                "targetId": {
+                    "type": "string"
+                },
+                "targetPort": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.BoardNode": {
+            "type": "object",
+            "properties": {
+                "boardId": {
+                    "type": "string"
+                },
+                "data": {
+                    "description": "存储文本内容、颜色等自定义元数据",
+                    "type": "string"
+                },
+                "height": {
+                    "type": "number"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "type": {
+                    "description": "如 \"rect\", \"circle\"",
+                    "type": "string"
+                },
+                "width": {
+                    "type": "number"
+                },
+                "x": {
+                    "type": "number"
+                },
+                "y": {
+                    "type": "number"
+                }
+            }
+        },
+        "model.User": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "description": "用户UUID",
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
                 }
             }
         }

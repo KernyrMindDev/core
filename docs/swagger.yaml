@@ -1,4 +1,118 @@
 basePath: /api/v1
+definitions:
+  dto.BoardDetailResponse:
+    properties:
+      board:
+        $ref: '#/definitions/model.Board'
+      connections:
+        items:
+          $ref: '#/definitions/model.BoardConnection'
+        type: array
+      nodes:
+        items:
+          $ref: '#/definitions/model.BoardNode'
+        type: array
+    type: object
+  dto.CreateBoardRequest:
+    properties:
+      title:
+        example: 示例白板
+        type: string
+      userId:
+        example: user
+        type: string
+    required:
+    - title
+    - userId
+    type: object
+  dto.ErrorResponse:
+    properties:
+      error:
+        example: 请求出错
+        type: string
+    type: object
+  dto.RegisterRequest:
+    properties:
+      email:
+        example: user@example.com
+        type: string
+      password:
+        example: "123456"
+        minLength: 6
+        type: string
+      username:
+        example: user
+        type: string
+    required:
+    - email
+    - password
+    - username
+    type: object
+  model.Board:
+    properties:
+      createdAt:
+        type: string
+      id:
+        type: string
+      title:
+        type: string
+      updatedAt:
+        type: string
+      userId:
+        type: string
+    type: object
+  model.BoardConnection:
+    properties:
+      boardId:
+        type: string
+      id:
+        type: string
+      sourceId:
+        type: string
+      sourcePort:
+        description: top, bottom, left, right, center
+        type: string
+      style:
+        description: 箭头样式、粗细等 JSON 字符串
+        type: string
+      targetId:
+        type: string
+      targetPort:
+        type: string
+    type: object
+  model.BoardNode:
+    properties:
+      boardId:
+        type: string
+      data:
+        description: 存储文本内容、颜色等自定义元数据
+        type: string
+      height:
+        type: number
+      id:
+        type: string
+      type:
+        description: 如 "rect", "circle"
+        type: string
+      width:
+        type: number
+      x:
+        type: number
+      "y":
+        type: number
+    type: object
+  model.User:
+    properties:
+      createdAt:
+        type: string
+      email:
+        type: string
+      id:
+        description: 用户UUID
+        type: string
+      username:
+        type: string
+    type: object
 host: localhost:8080
 info:
   contact: {}
@@ -6,6 +120,92 @@ info:
   title: KernyrMind Backend
   version: "1.0"
 paths:
+  /api/v1/auth/register:
+    post:
+      consumes:
+      - application/json
+      description: 通过用户名、邮箱和密码注册新账号
+      parameters:
+      - description: 注册信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 注册成功，返回用户信息
+          schema:
+            $ref: '#/definitions/model.User'
+        "400":
+          description: 参数验证失败或邮箱已被注册
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: 密码加密异常等服务器错误
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: 用户注册
+      tags:
+      - Auth
+  /api/v1/boards:
+    post:
+      consumes:
+      - application/json
+      description: 输入标题和所属用户ID创建新白板
+      parameters:
+      - description: 白板创建参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateBoardRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 创建成功，返回新白板信息
+          schema:
+            $ref: '#/definitions/model.Board'
+        "400":
+          description: 参数验证失败
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: 数据库创建失败
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: 创建新白板
+      tags:
+      - Boards
+  /api/v1/boards/{id}:
+    get:
+      consumes:
+      - application/json
+      description: 根据白板ID查询白板的基础信息、所有节点及节点间的连线
+      parameters:
+      - description: 白板 ID
+        example: '"board_abc123"'
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            $ref: '#/definitions/dto.BoardDetailResponse'
+        "404":
+          description: 白板不存在
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: 获取白板详情
+      tags:
+      - Boards
   /ping:
     get:
       consumes:

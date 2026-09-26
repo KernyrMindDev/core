@@ -6,8 +6,8 @@
 
 ### 技术栈
 
-前端: Vue+TypeScript
-后端: Go+Gin
+前端: Vue+TypeScript  
+后端: Go+Gin  
 API文档生成: Swagger([swaggo](https://github.com/swaggo/swag))
 
 ---
