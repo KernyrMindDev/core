@@ -18,3 +18,7 @@ web/dist/
 .idea/
 .vscode/
 *.swp
+
+# Runtime Data
+data.db
+data

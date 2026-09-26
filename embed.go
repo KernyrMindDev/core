@@ -1,4 +1,4 @@
-package kmd
+package emb
 
 import (
 	"embed"
