@@ -1,0 +1,26 @@
+basePath: /api/v1
+host: localhost:8080
+info:
+  contact: {}
+  description: API Docs for KernyrMind Backend
+  title: KernyrMind Backend
+  version: "1.0"
+paths:
+  /ping:
+    get:
+      consumes:
+      - application/json
+      description: 用于检测服务健康状态
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功返回 pong
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: 心跳检测
+      tags:
+      - System
+swagger: "2.0"
