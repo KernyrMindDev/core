@@ -47,10 +47,10 @@ func (h *BoardHandler) GetBoardDetail(c *gin.Context) {
 	h.DB.Where("board_id = ?", boardID).Find(&nodes)
 	h.DB.Where("board_id = ?", boardID).Find(&connections)
 
-	c.JSON(http.StatusOK, gin.H{
-		"board":       board,
-		"nodes":       nodes,
-		"connections": connections,
+	c.JSON(http.StatusOK, dto.BoardDetailResponse{
+		Board:       board,
+		Connections: connections,
+		Nodes:       nodes,
 	})
 }
 
