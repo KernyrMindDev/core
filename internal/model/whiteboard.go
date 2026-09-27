@@ -1,6 +1,11 @@
 package model
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+	"gorm.io/gorm"
+)
 
 // 白板基础信息
 type Board struct {
@@ -9,6 +14,13 @@ type Board struct {
 	Title     string    `gorm:"size:255;not null" json:"title"`
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+func (b *Board) BeforeCreate(tx *gorm.DB) error {
+	if b.ID == "" {
+		b.ID = uuid.NewString()
+	}
+	return nil
 }
 
 // 节点表
