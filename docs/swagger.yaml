@@ -238,6 +238,8 @@ paths:
           description: 数据库创建失败
           schema:
             $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
       summary: 创建新白板
       tags:
       - Boards
@@ -264,6 +266,8 @@ paths:
           description: 白板不存在
           schema:
             $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
       summary: 获取白板详情
       tags:
       - Boards
@@ -284,4 +288,10 @@ paths:
       summary: 心跳检测
       tags:
       - System
+securityDefinitions:
+  BearerAuth:
+    description: '在输入框中填入: Bearer <Token>'
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

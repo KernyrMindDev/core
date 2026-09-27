@@ -26,6 +26,11 @@ import (
 // @host            localhost:8080
 // @BasePath        /api/v1
 
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description 在输入框中填入: Bearer <Token>
+
 func main() {
 	// 解析config.yaml命令行参数
 	var configPath string
@@ -79,6 +84,9 @@ func main() {
 
 		// 白板资源
 		boards := api.Group("/boards")
+		// 加载Auth中间件
+		boards.Use(handler.JWTAuthMiddleware())
+		// 路由组
 		{
 			boards.POST("", boardHandler.CreateBoard)
 			boards.GET("/:id", boardHandler.GetBoardDetail)

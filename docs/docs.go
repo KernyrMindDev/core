@@ -121,6 +121,11 @@ const docTemplate = `{
         },
         "/boards": {
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "输入标题和所属用户ID创建新白板",
                 "consumes": [
                     "application/json"
@@ -167,6 +172,11 @@ const docTemplate = `{
         },
         "/boards/{id}": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "根据白板ID查询白板的基础信息、所有节点及节点间的连线",
                 "consumes": [
                     "application/json"
@@ -429,6 +439,14 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "description": "在输入框中填入: Bearer \u003cToken\u003e",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }`

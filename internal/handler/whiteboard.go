@@ -26,6 +26,7 @@ func NewBoardHandler(db *gorm.DB) *BoardHandler {
 // @Tags         Boards
 // @Accept       json
 // @Produce      json
+// @Security     BearerAuth
 // @Param        id   path      string                  true  "白板 ID" example("board_abc123")
 // @Success      200  {object}  dto.BoardDetailResponse "获取成功"
 // @Failure      404  {object}  dto.ErrorResponse       "白板不存在"
@@ -59,6 +60,7 @@ func (h *BoardHandler) GetBoardDetail(c *gin.Context) {
 // @Tags         Boards
 // @Accept       json
 // @Produce      json
+// @Security     BearerAuth
 // @Param        request  body      dto.CreateBoardRequest  true  "白板创建参数"
 // @Success      200      {object}  model.Board             "创建成功，返回新白板信息"
 // @Failure      400      {object}  dto.ErrorResponse       "参数验证失败"
