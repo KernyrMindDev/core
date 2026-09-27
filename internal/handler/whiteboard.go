@@ -29,7 +29,7 @@ func NewBoardHandler(db *gorm.DB) *BoardHandler {
 // @Param        id   path      string                  true  "白板 ID" example("board_abc123")
 // @Success      200  {object}  dto.BoardDetailResponse "获取成功"
 // @Failure      404  {object}  dto.ErrorResponse       "白板不存在"
-// @Router       /api/v1/boards/{id} [get]
+// @Router       /boards/{id} [get]
 func (h *BoardHandler) GetBoardDetail(c *gin.Context) {
 	boardID := c.Param("id")
 
@@ -63,7 +63,7 @@ func (h *BoardHandler) GetBoardDetail(c *gin.Context) {
 // @Success      200      {object}  model.Board             "创建成功，返回新白板信息"
 // @Failure      400      {object}  dto.ErrorResponse       "参数验证失败"
 // @Failure      500      {object}  dto.ErrorResponse       "数据库创建失败"
-// @Router       /api/v1/boards [post]
+// @Router       /boards [post]
 func (h *BoardHandler) CreateBoard(c *gin.Context) {
 	var req dto.CreateBoardRequest
 

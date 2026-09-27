@@ -42,3 +42,9 @@ func (dt *DatabaseType) UnmarshalYAML(unmarshal func(any) error) error {
 		return fmt.Errorf("invalid database type '%s', expected '%s' or '%s'", raw, Sqlite, PostgreSql)
 	}
 }
+
+// 应用数据库配置
+type AppDatabase struct {
+	Key   string `gorm:"primaryKey;type:varchar(100)"`
+	Value string `gorm:"not null"`
+}

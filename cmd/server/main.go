@@ -11,6 +11,7 @@ import (
 	"github.com/KernyrMindDev/core/internal/config"
 	"github.com/KernyrMindDev/core/internal/database"
 	"github.com/KernyrMindDev/core/internal/handler"
+	"github.com/KernyrMindDev/core/internal/service"
 
 	_ "github.com/KernyrMindDev/core/docs"
 	swaggerfiles "github.com/swaggo/files"
@@ -53,6 +54,9 @@ func main() {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
+	// 初始化JWT密钥
+	service.InitJWTKey(db)
+
 	// 初始化Gin路由
 	r := gin.Default()
 
@@ -70,7 +74,7 @@ func main() {
 		auth := api.Group("/auth")
 		{
 			auth.POST("/register", authHandler.Register)
-			// auth.POST("/login", authHandler.Login)
+			auth.POST("/login", authHandler.Login)
 		}
 
 		// 白板资源
@@ -80,6 +84,8 @@ func main() {
 			boards.GET("/:id", boardHandler.GetBoardDetail)
 		}
 	}
+
+	// Swagger UI仅在调试模式下启动
 	if appconfig.Debug {
 		// 自动重定向
 		r.GET("/swagger", func(c *gin.Context) {

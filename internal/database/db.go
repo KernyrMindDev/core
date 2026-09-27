@@ -47,11 +47,12 @@ func InitDB(appconfg *model.AppConfig) *gorm.DB {
 		&model.Board{},
 		&model.BoardNode{},
 		&model.BoardConnection{},
+		&model.AppDatabase{},
 	)
 	if err != nil {
 		log.Fatalf("数据表自动迁移失败: %v", err)
 	}
 
-	log.Println("数据库初始化成功，所有表已完成迁移。")
+	log.Println("数据库初始化成功")
 	return db
 }
