@@ -14,3 +14,8 @@ type BoardDetailResponse struct {
 	Nodes       []model.BoardNode       `json:"nodes"`
 	Connections []model.BoardConnection `json:"connections"`
 }
+
+// BoardsList 白板列表响应数据
+type BoardsList struct {
+	Board []model.Board `json:"board"`
+}

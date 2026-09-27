@@ -29,6 +29,8 @@ func NewBoardHandler(db *gorm.DB) *BoardHandler {
 // @Security     BearerAuth
 // @Param        id   path      string                  true  "白板 ID" example("board_abc123")
 // @Success      200  {object}  dto.BoardDetailResponse "获取成功"
+// @Failure      401  {object}  dto.ErrorResponse       "未登录"
+// @Failure      403  {object}  dto.ErrorResponse       "无权限访问"
 // @Failure      404  {object}  dto.ErrorResponse       "白板不存在"
 // @Router       /boards/{id} [get]
 func (h *BoardHandler) GetBoardDetail(c *gin.Context) {
@@ -51,6 +53,45 @@ func (h *BoardHandler) GetBoardDetail(c *gin.Context) {
 		Board:       board,
 		Connections: connections,
 		Nodes:       nodes,
+	})
+}
+
+// GetBoards 获取白板详情
+// @Summary      获取白板列表
+// @Description  获取当前账户下的所有白板
+// @Tags         Boards
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200  {object}  dto.BoardDetailResponse "获取成功"
+// @Failure      401  {object}  dto.ErrorResponse       "未登录"
+// @Router       /boards [get]
+func (h *BoardHandler) GetBoards(c *gin.Context) {
+	// 获取UID
+	uid, exists := c.Get("uid")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, dto.ErrorResponse{
+			Error:  "Unauthorization",
+			Detail: "Lost login from middleware",
+		})
+		return
+	}
+
+	// 数据库查询
+	var boards []model.Board
+
+	err := h.DB.Where("user_id = ?", uid).Find(&boards).Error
+	if err != nil {
+		// 数据库查询出错
+		c.JSON(http.StatusInternalServerError, dto.ErrorResponse{
+			Error:  "Query Database failed",
+			Detail: err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, dto.BoardsList{
+		Board: boards,
 	})
 }
 

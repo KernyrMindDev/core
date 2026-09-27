@@ -45,7 +45,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 
 	if err := user.SetPassword(req.Password); err != nil {
 		c.JSON(http.StatusInternalServerError, dto.ErrorResponse{
-			Error:  "密码加密异常",
+			Error:  "Password encode failed",
 			Detail: err.Error(),
 		})
 		return
@@ -53,7 +53,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 
 	if err := h.DB.Create(&user).Error; err != nil {
 		c.JSON(http.StatusBadRequest, dto.ErrorResponse{
-			Error:  "邮箱已被注册或入库失败",
+			Error:  "Write Database failed",
 			Detail: err.Error(),
 		})
 		return
