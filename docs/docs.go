@@ -141,7 +141,7 @@ const docTemplate = `{
                     "200": {
                         "description": "获取成功",
                         "schema": {
-                            "$ref": "#/definitions/dto.BoardDetailResponse"
+                            "$ref": "#/definitions/dto.BoardsList"
                         }
                     },
                     "401": {
@@ -302,6 +302,17 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/model.BoardNode"
+                    }
+                }
+            }
+        },
+        "dto.BoardsList": {
+            "type": "object",
+            "properties": {
+                "board": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Board"
                     }
                 }
             }

@@ -13,6 +13,13 @@ definitions:
           $ref: '#/definitions/model.BoardNode'
         type: array
     type: object
+  dto.BoardsList:
+    properties:
+      board:
+        items:
+          $ref: '#/definitions/model.Board'
+        type: array
+    type: object
   dto.CreateBoardRequest:
     properties:
       title:
@@ -222,7 +229,7 @@ paths:
         "200":
           description: 获取成功
           schema:
-            $ref: '#/definitions/dto.BoardDetailResponse'
+            $ref: '#/definitions/dto.BoardsList'
         "401":
           description: 未登录
           schema:

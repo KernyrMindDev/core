@@ -63,7 +63,7 @@ func (h *BoardHandler) GetBoardDetail(c *gin.Context) {
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Success      200  {object}  dto.BoardDetailResponse "获取成功"
+// @Success      200  {object}  dto.BoardsList "获取成功"
 // @Failure      401  {object}  dto.ErrorResponse       "未登录"
 // @Router       /boards [get]
 func (h *BoardHandler) GetBoards(c *gin.Context) {
