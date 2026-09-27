@@ -4,8 +4,7 @@ import "github.com/KernyrMindDev/core/internal/model"
 
 // CreateBoardRequest 创建白板请求参数
 type CreateBoardRequest struct {
-	Title  string `json:"title" binding:"required" example:"示例白板"`
-	UserID string `json:"userId" binding:"required" example:"user"`
+	Title string `json:"title" binding:"required" example:"示例白板"`
 }
 
 // BoardDetailResponse 白板详情响应数据

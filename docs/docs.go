@@ -320,17 +320,12 @@ const docTemplate = `{
         "dto.CreateBoardRequest": {
             "type": "object",
             "required": [
-                "title",
-                "userId"
+                "title"
             ],
             "properties": {
                 "title": {
                     "type": "string",
                     "example": "示例白板"
-                },
-                "userId": {
-                    "type": "string",
-                    "example": "user"
                 }
             }
         },

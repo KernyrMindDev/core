@@ -108,6 +108,24 @@ func (h *BoardHandler) GetBoards(c *gin.Context) {
 // @Failure      500      {object}  dto.ErrorResponse       "数据库创建失败"
 // @Router       /boards [post]
 func (h *BoardHandler) CreateBoard(c *gin.Context) {
+	// 获取UID
+	id, exists := c.Get("uid")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, dto.ErrorResponse{
+			Error:  "Unauthorized",
+			Detail: "Lost login from middleware",
+		})
+		return
+	}
+	uid, ok := id.(string)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, dto.ErrorResponse{
+			Error:  "Unauthorized",
+			Detail: "UID from middleware transform to string failed",
+		})
+		return
+	}
+
 	var req dto.CreateBoardRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -117,7 +135,7 @@ func (h *BoardHandler) CreateBoard(c *gin.Context) {
 
 	newBoard := model.Board{
 		Title:  req.Title,
-		UserID: req.UserID,
+		UserID: uid,
 	}
 
 	if err := h.DB.Create(&newBoard).Error; err != nil {

@@ -25,12 +25,8 @@ definitions:
       title:
         example: 示例白板
         type: string
-      userId:
-        example: user
-        type: string
     required:
     - title
-    - userId
     type: object
   dto.ErrorResponse:
     properties:
