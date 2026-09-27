@@ -71,7 +71,7 @@ func (h *BoardHandler) GetBoards(c *gin.Context) {
 	uid, exists := c.Get("uid")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, dto.ErrorResponse{
-			Error:  "Unauthorization",
+			Error:  "Unauthorized",
 			Detail: "Lost login from middleware",
 		})
 		return

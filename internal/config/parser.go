@@ -9,7 +9,7 @@ import (
 )
 
 // 读取并解析应用配置
-func PasreAppConfig(path string) (*model.AppConfig, error) {
+func ParseAppConfig(path string) (*model.AppConfig, error) {
 	configFile, err := os.ReadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("Error: read config.yaml failed: %v", err)

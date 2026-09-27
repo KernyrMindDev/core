@@ -12,7 +12,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// 不对外暴漏
+// 不对外暴露
 var jwtKey []byte
 
 // generateRandomKey 生成指定字节长度的强随机数

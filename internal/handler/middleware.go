@@ -16,7 +16,7 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
 			c.JSON(http.StatusUnauthorized, dto.ErrorResponse{
-				Error:  "Unauthorization",
+				Error:  "Unauthorized",
 				Detail: "Lost Authorization header",
 			})
 			c.Abort() // 终止后续后续处理函数的执行
@@ -27,7 +27,7 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 		parts := strings.SplitN(authHeader, " ", 2)
 		if !(len(parts) == 2 && parts[0] == "Bearer") {
 			c.JSON(http.StatusUnauthorized, dto.ErrorResponse{
-				Error:  "Unauthorization",
+				Error:  "Unauthorized",
 				Detail: "Except Bearer token",
 			})
 			c.Abort()
@@ -38,7 +38,7 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 		claims, err := service.ParseToken(parts[1])
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, dto.ErrorResponse{
-				Error:  "Unauthorization",
+				Error:  "Unauthorized",
 				Detail: "Invailed or expired token",
 			})
 			c.Abort()

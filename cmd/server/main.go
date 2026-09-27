@@ -44,7 +44,7 @@ func main() {
 	}
 
 	// 解析yaml
-	appconfig, err := config.PasreAppConfig(configPath)
+	appconfig, err := config.ParseAppConfig(configPath)
 	if err != nil {
 		fmt.Printf("Error: config file pasre failed: %v\n", err)
 		os.Exit(1)

@@ -12,15 +12,15 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-func InitDB(appconfg *model.AppConfig) *gorm.DB {
+func InitDB(appconfig *model.AppConfig) *gorm.DB {
 	var err error
 	var db *gorm.DB
 	gormConfig := &gorm.Config{}
 	// 调试模式, 开启数据库日志
-	if appconfg.Debug {
+	if appconfig.Debug {
 		gormConfig.Logger = logger.Default.LogMode(logger.Info)
 	}
-	switch appconfg.Database.DBType {
+	switch appconfig.Database.DBType {
 	case model.Sqlite:
 		// SQLite开启WAL模式防止并发锁表
 		dsn := "data.db?_journal_mode=WAL"
@@ -28,12 +28,12 @@ func InitDB(appconfg *model.AppConfig) *gorm.DB {
 	case model.PostgreSql:
 		// 构造postgresql连接信息
 		var sslmode string
-		if appconfg.Database.PgSSL {
+		if appconfig.Database.PgSSL {
 			sslmode = "enable"
 		} else {
 			sslmode = "disable"
 		}
-		dsn := fmt.Sprintf("host=%v user=%v password=%v dbname=%v port=%v sslmode=%v", appconfg.Database.PgHost, appconfg.Database.PgUser, appconfg.Database.PgPassword, appconfg.Database.PgDbname, appconfg.Database.PgPort, sslmode)
+		dsn := fmt.Sprintf("host=%v user=%v password=%v dbname=%v port=%v sslmode=%v", appconfig.Database.PgHost, appconfig.Database.PgUser, appconfig.Database.PgPassword, appconfig.Database.PgDbname, appconfig.Database.PgPort, sslmode)
 		db, err = gorm.Open(postgres.Open(dsn), gormConfig)
 	}
 
