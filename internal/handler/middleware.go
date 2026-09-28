@@ -28,7 +28,7 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 		if !(len(parts) == 2 && parts[0] == "Bearer") {
 			c.JSON(http.StatusUnauthorized, dto.ErrorResponse{
 				Error:  "Unauthorized",
-				Detail: "Except Bearer token",
+				Detail: "Expect Bearer token",
 			})
 			c.Abort()
 			return

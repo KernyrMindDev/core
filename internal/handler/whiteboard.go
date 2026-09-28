@@ -180,7 +180,7 @@ func (h *BoardHandler) GetBoards(c *gin.Context) {
 
 // CreateBoard 创建新白板
 // @Summary      创建新白板
-// @Description  输入标题和所属用户ID创建新白板
+// @Description  输入标题创建新白板
 // @Tags         Boards
 // @Accept       json
 // @Produce      json

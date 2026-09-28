@@ -119,7 +119,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		})
 		return
 	}
-	c.JSON(http.StatusAccepted, dto.LoginSuccess{
+	c.JSON(http.StatusOK, dto.LoginSuccess{
 		Token: token,
 	})
 }

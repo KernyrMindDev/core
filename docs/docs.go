@@ -158,7 +158,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "输入标题和所属用户ID创建新白板",
+                "description": "输入标题创建新白板",
                 "consumes": [
                     "application/json"
                 ],
