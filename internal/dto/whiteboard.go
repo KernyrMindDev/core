@@ -18,3 +18,8 @@ type BoardDetailResponse struct {
 type BoardsList struct {
 	Boards []model.Board `json:"boards"`
 }
+
+// ChangeBoardDetailRequest 修改白板详细信息请求参数
+type ChangeBoardDetailRequest struct {
+	Title string `json:"title" binding:"required" example:"新名字"`
+}

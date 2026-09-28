@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/KernyrMindDev/core/internal/dto"
@@ -178,8 +180,8 @@ func (h *BoardHandler) GetBoards(c *gin.Context) {
 	})
 }
 
-// CreateBoard 创建新白板
-// @Summary      创建新白板
+// CreateBoard   创建新白板
+// @Summary      在用户账户下创建新白板
 // @Description  输入标题创建新白板
 // @Tags         Boards
 // @Accept       json
@@ -219,4 +221,76 @@ func (h *BoardHandler) CreateBoard(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, newBoard)
+}
+
+// UpdateBoard   更新白板信息
+// @Summary      更新指定白板的信息
+// @Description  更新指定白板的标题
+// @Tags         Boards
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id   path      string       true  "白板 ID" example("board_abc123")
+// @Param        request  body      dto.ChangeBoardDetailRequest  true  "白板创建参数"
+// @Success      200      {object}  model.Board             "修改成功，返回白板信息"
+// @Failure      400      {object}  dto.ErrorResponse       "参数不足"
+// @Failure      403      {object}  dto.ErrorResponse       "权限不足"
+// @Failure      404      {object}  dto.ErrorResponse       "白板不存在"
+// @Failure      500      {object}  dto.ErrorResponse       "数据库独学而失败"
+// @Router       /boards/{id} [put]
+func (h *BoardHandler) UpdateBoard(c *gin.Context) {
+	// 获取UID
+	uid := c.GetString("uid")
+	if uid == "" {
+		c.JSON(http.StatusUnauthorized, dto.ErrorResponse{
+			Error:  "Unauthorized",
+			Detail: "Lost login from middleware",
+		})
+		return
+	}
+	// 解析请求体
+	var req dto.ChangeBoardDetailRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: err.Error()})
+		return
+	}
+	// 数据库查询
+	var board model.Board
+	if err := h.DB.First(&board, c.Param("id")).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			// 记录不存在
+			c.JSON(http.StatusNotFound, dto.ErrorResponse{
+				Error:  "Not found",
+				Detail: "Board not found",
+			})
+		} else {
+			// 数据库错误
+			c.JSON(http.StatusNotFound, dto.ErrorResponse{
+				Error:  "Not found",
+				Detail: fmt.Sprintf("Database error: %v", err),
+			})
+		}
+		return
+	}
+	// 权限检查
+	if board.UserID != uid {
+		c.JSON(http.StatusForbidden, dto.ErrorResponse{
+			Error:  "Permission denied",
+			Detail: "Try to change another user's board",
+		})
+		return
+	}
+	// 修改
+	board.Title = req.Title
+	// 写数据库
+	if err := h.DB.Save(&board).Error; err != nil {
+		// 写入失败
+		c.JSON(http.StatusInternalServerError, dto.ErrorResponse{
+			Error:  "Internet Server Errror",
+			Detail: err.Error(),
+		})
+	} else {
+		// 成功
+		c.JSON(http.StatusOK, board)
+	}
 }

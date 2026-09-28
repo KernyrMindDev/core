@@ -168,7 +168,7 @@ const docTemplate = `{
                 "tags": [
                     "Boards"
                 ],
-                "summary": "创建新白板",
+                "summary": "在用户账户下创建新白板",
                 "parameters": [
                     {
                         "description": "白板创建参数",
@@ -251,6 +251,75 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "白板不存在",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "更新指定白板的标题",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Boards"
+                ],
+                "summary": "更新指定白板的信息",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "example": "\"board_abc123\"",
+                        "description": "白板 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "白板创建参数",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.ChangeBoardDetailRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "修改成功，返回白板信息",
+                        "schema": {
+                            "$ref": "#/definitions/model.Board"
+                        }
+                    },
+                    "400": {
+                        "description": "参数不足",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "权限不足",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "白板不存在",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "数据库独学而失败",
                         "schema": {
                             "$ref": "#/definitions/dto.ErrorResponse"
                         }
@@ -371,6 +440,18 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/model.Board"
                     }
+                }
+            }
+        },
+        "dto.ChangeBoardDetailRequest": {
+            "type": "object",
+            "required": [
+                "title"
+            ],
+            "properties": {
+                "title": {
+                    "type": "string",
+                    "example": "新名字"
                 }
             }
         },

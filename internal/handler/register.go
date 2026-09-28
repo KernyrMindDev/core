@@ -30,8 +30,9 @@ func InitRouter(api *gin.RouterGroup, db *gorm.DB) {
 		// 路由组
 		{
 			boards.POST("", boardHandler.CreateBoard)
-			boards.GET("/:id", boardHandler.GetBoardDetail)
 			boards.GET("", boardHandler.GetBoards)
+			boards.GET("/:id", boardHandler.GetBoardDetail)
+			boards.PUT("/:id", boardHandler.UpdateBoard)
 			boards.DELETE("/:id", boardHandler.DeleteBoard)
 		}
 	}

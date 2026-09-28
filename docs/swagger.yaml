@@ -20,6 +20,14 @@ definitions:
           $ref: '#/definitions/model.Board'
         type: array
     type: object
+  dto.ChangeBoardDetailRequest:
+    properties:
+      title:
+        example: 新名字
+        type: string
+    required:
+    - title
+    type: object
   dto.CreateBoardRequest:
     properties:
       title:
@@ -263,7 +271,7 @@ paths:
             $ref: '#/definitions/dto.ErrorResponse'
       security:
       - BearerAuth: []
-      summary: 创建新白板
+      summary: 在用户账户下创建新白板
       tags:
       - Boards
   /boards/{id}:
@@ -337,6 +345,51 @@ paths:
       security:
       - BearerAuth: []
       summary: 获取白板详情
+      tags:
+      - Boards
+    put:
+      consumes:
+      - application/json
+      description: 更新指定白板的标题
+      parameters:
+      - description: 白板 ID
+        example: '"board_abc123"'
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: 白板创建参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ChangeBoardDetailRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 修改成功，返回白板信息
+          schema:
+            $ref: '#/definitions/model.Board'
+        "400":
+          description: 参数不足
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "403":
+          description: 权限不足
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: 白板不存在
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: 数据库独学而失败
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 更新指定白板的信息
       tags:
       - Boards
   /ping:

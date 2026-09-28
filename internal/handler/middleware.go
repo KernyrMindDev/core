@@ -19,7 +19,7 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 				Error:  "Unauthorized",
 				Detail: "Lost Authorization header",
 			})
-			c.Abort() // 终止后续后续处理函数的执行
+			c.Abort() // 终止后续处理函数的执行
 			return
 		}
 
