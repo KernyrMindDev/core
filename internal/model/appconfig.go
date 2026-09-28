@@ -4,18 +4,20 @@ import "fmt"
 
 // 应用配置结构体
 type AppConfig struct {
-	Port     int `yaml:"port"`
-	Database struct {
-		DBType DatabaseType `yaml:"type"`
-		// PostgreSQL独占配置
-		PgHost     string `yaml:"host"`
-		PgPort     int    `yaml:"port"`
-		PgUser     string `yaml:"username"`
-		PgPassword string `yaml:"password"`
-		PgDbname   string `yaml:"dbname"`
-		PgSSL      bool   `yaml:"ssl"`
-	} `yaml:"database"`
-	Debug bool `yaml:"debug"`
+	Port     int      `yaml:"port"`
+	Database Database `yaml:"database"`
+	Debug    bool     `yaml:"debug"`
+}
+
+type Database struct {
+	DBType DatabaseType `yaml:"type"`
+	// PostgreSQL独占配置
+	PgHost     string `yaml:"host"`     // 主机名
+	PgPort     int    `yaml:"port"`     //端口
+	PgUser     string `yaml:"username"` // 用户名
+	PgPassword string `yaml:"password"` // 密码
+	PgDbname   string `yaml:"dbname"`   // 数据库名
+	PgSSL      bool   `yaml:"ssl"`      // 是否开启加密
 }
 
 // 数据库类型枚举
@@ -33,12 +35,15 @@ func (dt *DatabaseType) UnmarshalYAML(unmarshal func(any) error) error {
 		return err
 	}
 
+	// 强制转化数据库类型
 	val := DatabaseType(raw)
 	switch val {
 	case Sqlite, PostgreSql:
+		// 正确的数据库类型
 		*dt = val
 		return nil
 	default:
+		// 数据库类型不属于已知类型
 		return fmt.Errorf("invalid database type '%s', expected '%s' or '%s'", raw, Sqlite, PostgreSql)
 	}
 }
