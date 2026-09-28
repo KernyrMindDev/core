@@ -151,8 +151,8 @@ func (h *BoardHandler) DeleteBoard(c *gin.Context) {
 // @Router       /boards [get]
 func (h *BoardHandler) GetBoards(c *gin.Context) {
 	// 获取UID
-	uid, exists := c.Get("uid")
-	if !exists {
+	uid := c.GetString("uid")
+	if uid == "" {
 		c.JSON(http.StatusUnauthorized, dto.ErrorResponse{
 			Error:  "Unauthorized",
 			Detail: "Lost login from middleware",

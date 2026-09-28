@@ -39,7 +39,7 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, dto.ErrorResponse{
 				Error:  "Unauthorized",
-				Detail: "Invailed or expired token",
+				Detail: "Invalid or expired token",
 			})
 			c.Abort()
 			return
