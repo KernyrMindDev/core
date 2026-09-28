@@ -174,7 +174,7 @@ func (h *BoardHandler) GetBoards(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, dto.BoardsList{
-		Board: boards,
+		Boards: boards,
 	})
 }
 

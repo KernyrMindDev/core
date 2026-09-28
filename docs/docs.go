@@ -366,7 +366,7 @@ const docTemplate = `{
         "dto.BoardsList": {
             "type": "object",
             "properties": {
-                "board": {
+                "boards": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/model.Board"

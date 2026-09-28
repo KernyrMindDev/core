@@ -15,7 +15,7 @@ definitions:
     type: object
   dto.BoardsList:
     properties:
-      board:
+      boards:
         items:
           $ref: '#/definitions/model.Board'
         type: array

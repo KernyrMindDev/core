@@ -31,6 +31,8 @@ func InitRouter(api *gin.RouterGroup, db *gorm.DB) {
 		{
 			boards.POST("", boardHandler.CreateBoard)
 			boards.GET("/:id", boardHandler.GetBoardDetail)
+			boards.GET("", boardHandler.GetBoards)
+			boards.DELETE("/:id", boardHandler.DeleteBoard)
 		}
 	}
 }
