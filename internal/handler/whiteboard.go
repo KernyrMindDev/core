@@ -54,6 +54,7 @@ func (h *BoardHandler) GetBoardDetail(c *gin.Context) {
 	// 判断权限
 	if board.UserID != uid {
 		c.JSON(http.StatusForbidden, dto.ErrorResponse{Error: "无权限访问此白板"})
+		return
 	}
 
 	// 查询所有节点与连线
