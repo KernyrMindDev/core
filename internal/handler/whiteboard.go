@@ -34,12 +34,26 @@ func NewBoardHandler(db *gorm.DB) *BoardHandler {
 // @Failure      404  {object}  dto.ErrorResponse       "白板不存在"
 // @Router       /boards/{id} [get]
 func (h *BoardHandler) GetBoardDetail(c *gin.Context) {
+	// 获取登录状态
+	uid := c.GetString("uid")
+	if uid == "" {
+		c.JSON(http.StatusUnauthorized, dto.ErrorResponse{
+			Error:  "Unauthorized",
+			Detail: "Lost login from middleware",
+		})
+		return
+	}
+	// 数据库查询
 	boardID := c.Param("id")
 
 	var board model.Board
 	if err := h.DB.First(&board, "id = ?", boardID).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "白板不存在"})
+		c.JSON(http.StatusNotFound, dto.ErrorResponse{Error: "白板不存在"})
 		return
+	}
+	// 判断权限
+	if board.UserID != uid {
+		c.JSON(http.StatusForbidden, dto.ErrorResponse{Error: "无权限访问此白板"})
 	}
 
 	// 查询所有节点与连线
@@ -56,7 +70,75 @@ func (h *BoardHandler) GetBoardDetail(c *gin.Context) {
 	})
 }
 
-// GetBoards 获取白板详情
+// DeleteBoard   删除白板
+// @Summary      删除指定白板
+// @Description  根据白板ID删除白板的基础信息、所有节点及节点间的连线
+// @Tags         Boards
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id   path      string                  true  "白板 ID" example("board_abc123")
+// @Success      204   "删除成功"
+// @Failure      401  {object}  dto.ErrorResponse       "未登录"
+// @Failure      403  {object}  dto.ErrorResponse       "无权限访问"
+// @Failure      404  {object}  dto.ErrorResponse       "白板不存在"
+// @Failure      500  {object}  dto.ErrorResponse       "删除失败"
+// @Router       /boards/{id} [delete]
+func (h *BoardHandler) DeleteBoard(c *gin.Context) {
+	// 获取登录状态
+	uid := c.GetString("uid")
+	if uid == "" {
+		c.JSON(http.StatusUnauthorized, dto.ErrorResponse{
+			Error:  "Unauthorized",
+			Detail: "Lost login from middleware",
+		})
+		return
+	}
+	// 提取白板ID
+	boardID := c.Param("id")
+	// 数据库查询
+	var board model.Board
+	if err := h.DB.First(&board, "id = ?", boardID).Error; err != nil {
+		c.JSON(http.StatusNotFound, dto.ErrorResponse{Error: "白板不存在"})
+		return
+	}
+	// 判断权限
+	if board.UserID != uid {
+		c.JSON(http.StatusForbidden, dto.ErrorResponse{Error: "无权限访问此白板"})
+		return
+	}
+	// 开启数据库事务，确保原子性
+	err := h.DB.Transaction(func(tx *gorm.DB) error {
+		// 删除关联的节点
+		if err := tx.Where("board_id = ?", boardID).Delete(&model.BoardNode{}).Error; err != nil {
+			return err
+		}
+
+		// 删除关联的连线
+		if err := tx.Where("board_id = ?", boardID).Delete(&model.BoardConnection{}).Error; err != nil {
+			return err
+		}
+
+		// 删除白板本身
+		if err := tx.Delete(&board).Error; err != nil {
+			return err
+		}
+
+		// 返回 nil 自动提交事务，返回 error 自动回滚
+		return nil
+	})
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, dto.ErrorResponse{
+			Error:  "删除白板及关联数据失败",
+			Detail: err.Error(),
+		})
+		return
+	}
+	c.Status(http.StatusNoContent)
+}
+
+// GetBoards 	 获取白板列表
 // @Summary      获取白板列表
 // @Description  获取当前账户下的所有白板
 // @Tags         Boards
@@ -109,25 +191,17 @@ func (h *BoardHandler) GetBoards(c *gin.Context) {
 // @Router       /boards [post]
 func (h *BoardHandler) CreateBoard(c *gin.Context) {
 	// 获取UID
-	id, exists := c.Get("uid")
-	if !exists {
+	uid := c.GetString("uid")
+	if uid == "" {
 		c.JSON(http.StatusUnauthorized, dto.ErrorResponse{
 			Error:  "Unauthorized",
 			Detail: "Lost login from middleware",
 		})
 		return
 	}
-	uid, ok := id.(string)
-	if !ok {
-		c.JSON(http.StatusUnauthorized, dto.ErrorResponse{
-			Error:  "Unauthorized",
-			Detail: "UID from middleware transform to string failed",
-		})
-		return
-	}
 
 	var req dto.CreateBoardRequest
-
+	// 解析请求体
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: err.Error()})
 		return
@@ -137,7 +211,7 @@ func (h *BoardHandler) CreateBoard(c *gin.Context) {
 		Title:  req.Title,
 		UserID: uid,
 	}
-
+	// 写入数据库, UUID会自动生成
 	if err := h.DB.Create(&newBoard).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, dto.ErrorResponse{Error: "创建失败"})
 		return

@@ -267,6 +267,43 @@ paths:
       tags:
       - Boards
   /boards/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: 根据白板ID删除白板的基础信息、所有节点及节点间的连线
+      parameters:
+      - description: 白板 ID
+        example: '"board_abc123"'
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: 删除成功
+        "401":
+          description: 未登录
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "403":
+          description: 无权限访问
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: 白板不存在
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: 删除失败
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 删除指定白板
+      tags:
+      - Boards
     get:
       consumes:
       - application/json
