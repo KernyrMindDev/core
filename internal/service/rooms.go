@@ -35,6 +35,21 @@ func NewRoom(boardID string) *Room {
 	}
 }
 
+// 移除客户端并关闭连接
+func (room *Room) removeClient(client *Client) {
+	participantID := client.participant.ID
+	// 判断Client是否存在并校验一致性
+	current, ok := room.clients[participantID]
+	if !ok || current != client {
+		return
+	}
+	// 从储存中删除
+	delete(room.clients, participantID)
+	delete(room.participants, participantID)
+	// 关闭通道后交给WriteLoop依次向下关闭各个连接
+	close(client.send)
+}
+
 // Room实例事件循环协程
 func (room *Room) Run() {
 	for {
@@ -66,15 +81,10 @@ func (room *Room) handleJoin(client *Client) {
 
 // 处理用户离开
 func (room *Room) handleLeave(client *Client) {
-	id := client.participant.ID
+	// TODO:增加事件广播
 
-	// Client存在且一致
-	if current, ok := room.clients[id]; ok && current == client {
-		delete(room.clients, id)
-		delete(room.participants, id)
-		// 关闭send通道, 让WriteMessage函数退出
-		close(client.send)
-	}
+	// removeClient只负责清理实例和连接
+	room.removeClient(client)
 }
 
 // 处理用户操作消息
