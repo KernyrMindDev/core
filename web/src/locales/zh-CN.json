@@ -1,7 +1,10 @@
 {
   "common": {
     "confirm": "确定",
-    "cancel": "取消"
+    "cancel": "取消",
+    "whiteboard": "白板",
+    "node": "节点",
+    "connection": "连线"
   },
   "app": {
     "title": "KernyrMind",
