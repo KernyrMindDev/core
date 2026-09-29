@@ -1,0 +1,10 @@
+{
+  "common": {
+    "confirm": "确定",
+    "cancel": "取消"
+  },
+  "app": {
+    "title": "KernyrMind",
+    "welcome": "欢迎使用"
+  }
+}

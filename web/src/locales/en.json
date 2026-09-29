@@ -1,0 +1,10 @@
+{
+  "common": {
+    "confirm": "Confirm",
+    "cancel": "Cancel"
+  },
+  "app": {
+    "title": "KernyrMind",
+    "welcome": "Welcome"
+  }
+}

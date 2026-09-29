@@ -1,7 +1,5 @@
-<script setup lang="ts">
-import HelloWorld from './components/HelloWorld.vue'
-</script>
-
 <template>
-  <HelloWorld />
+  <!-- <HelloWorld /> -->
+  <h1>{{ $t("app.title") }}</h1>
+  <button>{{ $t("common.confirm") }}</button>
 </template>
