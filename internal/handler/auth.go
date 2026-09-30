@@ -1,23 +1,23 @@
 package handler
 
 import (
-	"errors"
 	"net/http"
 
 	"github.com/KernyrMindDev/core/internal/dto"
-	"github.com/KernyrMindDev/core/internal/model"
 	"github.com/KernyrMindDev/core/internal/service"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
 
+// AuthHandler 只负责解析请求 / 调用 Service / 组装响应，
+// 业务逻辑(密码校验、Token 生成)由 AuthService 承担。
 type AuthHandler struct {
-	DB *gorm.DB
+	svc *service.AuthService
 }
 
 func NewAuthHandler(db *gorm.DB) *AuthHandler {
-	return &AuthHandler{DB: db}
+	return &AuthHandler{svc: service.NewAuthService(db)}
 }
 
 // Register 用户注册
@@ -34,28 +34,13 @@ func NewAuthHandler(db *gorm.DB) *AuthHandler {
 func (h *AuthHandler) Register(c *gin.Context) {
 	var req dto.RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: err.Error()})
 		return
 	}
 
-	user := model.User{
-		Username: req.Username,
-		Email:    req.Email,
-	}
-
-	if err := user.SetPassword(req.Password); err != nil {
-		c.JSON(http.StatusInternalServerError, dto.ErrorResponse{
-			Error:  "Password encode failed",
-			Detail: err.Error(),
-		})
-		return
-	}
-
-	if err := h.DB.Create(&user).Error; err != nil {
-		c.JSON(http.StatusBadRequest, dto.ErrorResponse{
-			Error:  "Write Database failed",
-			Detail: err.Error(),
-		})
+	user, err := h.svc.Register(req.Username, req.Email, req.Password)
+	if err != nil {
+		c.Error(err)
 		return
 	}
 
@@ -79,46 +64,16 @@ func (h *AuthHandler) Register(c *gin.Context) {
 func (h *AuthHandler) Login(c *gin.Context) {
 	var req dto.LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		// 解析失败
-		c.JSON(http.StatusBadRequest, dto.ErrorResponse{
-			Error: err.Error(),
-		})
+		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: err.Error()})
 		return
 	}
-	// 查库
-	var user model.User
-	err := h.DB.Where("email = ?", req.Email).First(&user).Error
+
+	token, err := h.svc.Login(req.Email, req.Password)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			c.JSON(http.StatusUnauthorized, dto.ErrorResponse{
-				Error:  "邮箱或密码错误",
-				Detail: "账户不存在",
-			})
-			return
-		} else {
-			c.JSON(http.StatusInternalServerError, dto.ErrorResponse{
-				Error:  "服务器内部错误",
-				Detail: err.Error(),
-			})
-			return
-		}
-	}
-	// 校验密码
-	if !user.CheckPassword(req.Password) {
-		c.JSON(http.StatusUnauthorized, dto.ErrorResponse{
-			Error: "邮箱或密码错误",
-		})
+		c.Error(err)
 		return
 	}
-	// 生成Token
-	token, err := service.GenerateToken(user.ID)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, dto.ErrorResponse{
-			Error:  "服务器内部错误",
-			Detail: err.Error(),
-		})
-		return
-	}
+
 	c.JSON(http.StatusOK, dto.LoginSuccess{
 		Token: token,
 	})

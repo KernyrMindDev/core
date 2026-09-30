@@ -1,25 +1,24 @@
 package handler
 
 import (
-	"errors"
-	"fmt"
 	"net/http"
 
 	"github.com/KernyrMindDev/core/internal/dto"
-	"github.com/KernyrMindDev/core/internal/model"
+	"github.com/KernyrMindDev/core/internal/service"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
 
-// BoardHandler 持有数据库连接
+// BoardHandler 只负责解析请求 / 调用 Service / 组装响应，
+// 不直接操作数据库，业务逻辑(权限校验、事务)由 BoardService 承担。
 type BoardHandler struct {
-	DB *gorm.DB
+	svc *service.BoardService
 }
 
 // 构造函数
 func NewBoardHandler(db *gorm.DB) *BoardHandler {
-	return &BoardHandler{DB: db}
+	return &BoardHandler{svc: service.NewBoardService(db)}
 }
 
 // GetBoardDetail 获取白板详情
@@ -36,33 +35,19 @@ func NewBoardHandler(db *gorm.DB) *BoardHandler {
 // @Failure      404  {object}  dto.ErrorResponse       "白板不存在"
 // @Router       /boards/{id} [get]
 func (h *BoardHandler) GetBoardDetail(c *gin.Context) {
-	// 获取登录状态
 	uid := c.GetString("uid")
-	// 数据库查询
 	boardID := c.Param("id")
 
-	var board model.Board
-	if err := h.DB.First(&board, "id = ?", boardID).Error; err != nil {
-		c.JSON(http.StatusNotFound, dto.ErrorResponse{Error: "白板不存在"})
+	detail, err := h.svc.GetBoardDetail(uid, boardID)
+	if err != nil {
+		c.Error(err)
 		return
 	}
-	// 判断权限
-	if board.UserID != uid {
-		c.JSON(http.StatusForbidden, dto.ErrorResponse{Error: "无权限访问此白板"})
-		return
-	}
-
-	// 查询所有节点与连线
-	var nodes []model.BoardNode
-	var connections []model.BoardConnection
-
-	h.DB.Where("board_id = ?", boardID).Find(&nodes)
-	h.DB.Where("board_id = ?", boardID).Find(&connections)
 
 	c.JSON(http.StatusOK, dto.BoardDetailResponse{
-		Board:       board,
-		Connections: connections,
-		Nodes:       nodes,
+		Board:       detail.Board,
+		Nodes:       detail.Nodes,
+		Connections: detail.Connections,
 	})
 }
 
@@ -81,47 +66,11 @@ func (h *BoardHandler) GetBoardDetail(c *gin.Context) {
 // @Failure      500  {object}  dto.ErrorResponse       "删除失败"
 // @Router       /boards/{id} [delete]
 func (h *BoardHandler) DeleteBoard(c *gin.Context) {
-	// 获取登录状态
 	uid := c.GetString("uid")
-	// 提取白板ID
 	boardID := c.Param("id")
-	// 数据库查询
-	var board model.Board
-	if err := h.DB.First(&board, "id = ?", boardID).Error; err != nil {
-		c.JSON(http.StatusNotFound, dto.ErrorResponse{Error: "白板不存在"})
-		return
-	}
-	// 判断权限
-	if board.UserID != uid {
-		c.JSON(http.StatusForbidden, dto.ErrorResponse{Error: "无权限访问此白板"})
-		return
-	}
-	// 开启数据库事务，确保原子性
-	err := h.DB.Transaction(func(tx *gorm.DB) error {
-		// 删除关联的节点
-		if err := tx.Where("board_id = ?", boardID).Delete(&model.BoardNode{}).Error; err != nil {
-			return err
-		}
 
-		// 删除关联的连线
-		if err := tx.Where("board_id = ?", boardID).Delete(&model.BoardConnection{}).Error; err != nil {
-			return err
-		}
-
-		// 删除白板本身
-		if err := tx.Delete(&board).Error; err != nil {
-			return err
-		}
-
-		// 返回 nil 自动提交事务，返回 error 自动回滚
-		return nil
-	})
-
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, dto.ErrorResponse{
-			Error:  "删除白板及关联数据失败",
-			Detail: err.Error(),
-		})
+	if err := h.svc.DeleteBoard(uid, boardID); err != nil {
+		c.Error(err)
 		return
 	}
 	c.Status(http.StatusNoContent)
@@ -138,19 +87,11 @@ func (h *BoardHandler) DeleteBoard(c *gin.Context) {
 // @Failure      401  {object}  dto.ErrorResponse       "未登录"
 // @Router       /boards [get]
 func (h *BoardHandler) GetBoards(c *gin.Context) {
-	// 获取UID
 	uid := c.GetString("uid")
 
-	// 数据库查询
-	var boards []model.Board
-
-	err := h.DB.Where("user_id = ?", uid).Find(&boards).Error
+	boards, err := h.svc.ListBoards(uid)
 	if err != nil {
-		// 数据库查询出错
-		c.JSON(http.StatusInternalServerError, dto.ErrorResponse{
-			Error:  "Query Database failed",
-			Detail: err.Error(),
-		})
+		c.Error(err)
 		return
 	}
 
@@ -172,27 +113,21 @@ func (h *BoardHandler) GetBoards(c *gin.Context) {
 // @Failure      500      {object}  dto.ErrorResponse       "数据库创建失败"
 // @Router       /boards [post]
 func (h *BoardHandler) CreateBoard(c *gin.Context) {
-	// 获取UID
 	uid := c.GetString("uid")
 
 	var req dto.CreateBoardRequest
-	// 解析请求体
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: err.Error()})
 		return
 	}
 
-	newBoard := model.Board{
-		Title:  req.Title,
-		UserID: uid,
-	}
-	// 写入数据库, UUID会自动生成
-	if err := h.DB.Create(&newBoard).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, dto.ErrorResponse{Error: "创建失败"})
+	board, err := h.svc.CreateBoard(uid, req.Title)
+	if err != nil {
+		c.Error(err)
 		return
 	}
 
-	c.JSON(http.StatusOK, newBoard)
+	c.JSON(http.StatusOK, board)
 }
 
 // UpdateBoard   更新白板信息
@@ -208,54 +143,22 @@ func (h *BoardHandler) CreateBoard(c *gin.Context) {
 // @Failure      400      {object}  dto.ErrorResponse       "参数不足"
 // @Failure      403      {object}  dto.ErrorResponse       "权限不足"
 // @Failure      404      {object}  dto.ErrorResponse       "白板不存在"
-// @Failure      500      {object}  dto.ErrorResponse       "数据库独学而失败"
+// @Failure      500      {object}  dto.ErrorResponse       "数据库读写失败"
 // @Router       /boards/{id} [put]
 func (h *BoardHandler) UpdateBoard(c *gin.Context) {
-	// 获取UID
 	uid := c.GetString("uid")
-	// 解析请求体
+
 	var req dto.ChangeBoardDetailRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: err.Error()})
 		return
 	}
-	// 数据库查询
-	var board model.Board
-	if err := h.DB.First(&board, c.Param("id")).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			// 记录不存在
-			c.JSON(http.StatusNotFound, dto.ErrorResponse{
-				Error:  "Not found",
-				Detail: "Board not found",
-			})
-		} else {
-			// 数据库错误
-			c.JSON(http.StatusNotFound, dto.ErrorResponse{
-				Error:  "Not found",
-				Detail: fmt.Sprintf("Database error: %v", err),
-			})
-		}
+
+	board, err := h.svc.UpdateBoard(uid, c.Param("id"), req.Title)
+	if err != nil {
+		c.Error(err)
 		return
 	}
-	// 权限检查
-	if board.UserID != uid {
-		c.JSON(http.StatusForbidden, dto.ErrorResponse{
-			Error:  "Permission denied",
-			Detail: "Try to change another user's board",
-		})
-		return
-	}
-	// 修改
-	board.Title = req.Title
-	// 写数据库
-	if err := h.DB.Save(&board).Error; err != nil {
-		// 写入失败
-		c.JSON(http.StatusInternalServerError, dto.ErrorResponse{
-			Error:  "Internet Server Errror",
-			Detail: err.Error(),
-		})
-	} else {
-		// 成功
-		c.JSON(http.StatusOK, board)
-	}
+
+	c.JSON(http.StatusOK, board)
 }

@@ -3,6 +3,7 @@ package service
 import (
 	"github.com/google/uuid"
 
+	"github.com/KernyrMindDev/core/internal/dto"
 	"github.com/KernyrMindDev/core/internal/model"
 )
 
@@ -105,4 +106,17 @@ func (room *Room) Leave(client *Client) {
 // 提交新事件
 func (room *Room) Submit(event ClientOperation) {
 	room.event <- event
+}
+
+func (room *Room) broadcast(msg dto.WSServerMessage) {
+	for _, client := range room.clients {
+		select {
+		case client.send <- msg:
+			// 正常进入发送队列
+
+		default:
+			// 发送队列已经满了，客户端跟不上
+			room.removeClient(client)
+		}
+	}
 }

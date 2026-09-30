@@ -39,6 +39,10 @@ func New(cfg *model.AppConfig) (*App, error) {
 	// 创建 Gin
 	r := gin.Default()
 
+	// 统一错误处理中间件，必须注册在所有业务路由之前，
+	// 统一翻译 Handler/Service 通过 c.Error(err) 上报的错误
+	r.Use(handler.ErrorHandlerMiddleware())
+
 	// 注册路由
 	api := r.Group("/api")
 	// 初始化路由
