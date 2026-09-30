@@ -38,13 +38,6 @@ func NewBoardHandler(db *gorm.DB) *BoardHandler {
 func (h *BoardHandler) GetBoardDetail(c *gin.Context) {
 	// 获取登录状态
 	uid := c.GetString("uid")
-	if uid == "" {
-		c.JSON(http.StatusUnauthorized, dto.ErrorResponse{
-			Error:  "Unauthorized",
-			Detail: "Lost login from middleware",
-		})
-		return
-	}
 	// 数据库查询
 	boardID := c.Param("id")
 
@@ -90,13 +83,6 @@ func (h *BoardHandler) GetBoardDetail(c *gin.Context) {
 func (h *BoardHandler) DeleteBoard(c *gin.Context) {
 	// 获取登录状态
 	uid := c.GetString("uid")
-	if uid == "" {
-		c.JSON(http.StatusUnauthorized, dto.ErrorResponse{
-			Error:  "Unauthorized",
-			Detail: "Lost login from middleware",
-		})
-		return
-	}
 	// 提取白板ID
 	boardID := c.Param("id")
 	// 数据库查询
@@ -154,13 +140,6 @@ func (h *BoardHandler) DeleteBoard(c *gin.Context) {
 func (h *BoardHandler) GetBoards(c *gin.Context) {
 	// 获取UID
 	uid := c.GetString("uid")
-	if uid == "" {
-		c.JSON(http.StatusUnauthorized, dto.ErrorResponse{
-			Error:  "Unauthorized",
-			Detail: "Lost login from middleware",
-		})
-		return
-	}
 
 	// 数据库查询
 	var boards []model.Board
@@ -195,13 +174,6 @@ func (h *BoardHandler) GetBoards(c *gin.Context) {
 func (h *BoardHandler) CreateBoard(c *gin.Context) {
 	// 获取UID
 	uid := c.GetString("uid")
-	if uid == "" {
-		c.JSON(http.StatusUnauthorized, dto.ErrorResponse{
-			Error:  "Unauthorized",
-			Detail: "Lost login from middleware",
-		})
-		return
-	}
 
 	var req dto.CreateBoardRequest
 	// 解析请求体
@@ -241,13 +213,6 @@ func (h *BoardHandler) CreateBoard(c *gin.Context) {
 func (h *BoardHandler) UpdateBoard(c *gin.Context) {
 	// 获取UID
 	uid := c.GetString("uid")
-	if uid == "" {
-		c.JSON(http.StatusUnauthorized, dto.ErrorResponse{
-			Error:  "Unauthorized",
-			Detail: "Lost login from middleware",
-		})
-		return
-	}
 	// 解析请求体
 	var req dto.ChangeBoardDetailRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
