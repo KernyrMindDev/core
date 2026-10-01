@@ -108,6 +108,7 @@ func (room *Room) Submit(event ClientOperation) {
 	room.event <- event
 }
 
+// 向房间内所有客户端广播消息
 func (room *Room) broadcast(msg dto.WSServerMessage) {
 	for _, client := range room.clients {
 		select {
@@ -118,5 +119,36 @@ func (room *Room) broadcast(msg dto.WSServerMessage) {
 			// 发送队列已经满了，客户端跟不上
 			room.removeClient(client)
 		}
+	}
+}
+
+// 向除了排除的客户端外的其他客户端广播消息
+func (room *Room) broadcastExcept(msg dto.WSServerMessage, client *Client) {
+	for _, c := range room.clients {
+		if client == c {
+			// 排除此客户端
+			continue
+		}
+		select {
+		case c.send <- msg:
+			// 正常进入发送队列
+
+		default:
+			// 发送队列已经满了，客户端跟不上
+			room.removeClient(c)
+		}
+	}
+}
+
+// 向指定的客户端广播消息
+func (room *Room) boardcastTo(msg dto.WSServerMessage, client *Client) bool {
+	select {
+	case client.send <- msg:
+		// 正常发送
+		return true
+	default:
+		// 踢出慢连接
+		room.removeClient(client)
+		return false
 	}
 }

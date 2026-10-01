@@ -319,7 +319,7 @@ const docTemplate = `{
                         }
                     },
                     "500": {
-                        "description": "数据库独学而失败",
+                        "description": "数据库读写失败",
                         "schema": {
                             "$ref": "#/definitions/dto.ErrorResponse"
                         }
