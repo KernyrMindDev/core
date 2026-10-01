@@ -78,14 +78,59 @@ func (room *Room) handleJoin(client *Client) {
 	// 通道确保了一次只有一个, 无需加锁
 	room.participants[id] = client.participant
 	room.clients[id] = client
+	// 扫描当前房间内用户, 构造用户列表
+	var participants dto.ParticipantList
+	for uuid, participant := range room.participants {
+		var participant dto.ParticipantInfo = dto.ParticipantInfo{
+			Nickname: participant.Nickname,
+			UUID:     uuid,
+		}
+		// TODO: 目前遍历顺序打乱, 可能需要追加排序
+		participants.Participants = append(participants.Participants, participant)
+	}
+	// 将用户列表发给新加入的Client
+	ok := room.broadcastTo(dto.WSServerMessage{
+		Type: dto.EventParticipantsSync,
+		Data: participants,
+	}, client)
+	if !ok {
+		// 新Client无法接收消息, 不再向原有客户端广播消息
+		room.removeClient(client) // 清理
+		return
+	}
+	// 向其他客户端广播新Client加入的消息
+	room.broadcastExcept(dto.WSServerMessage{
+		Type: dto.EventParticipantJoined,
+		Data: dto.ParticipantInfo{
+			Nickname: client.participant.Nickname,
+			UUID:     client.participant.ID,
+		},
+	}, client)
 }
 
 // 处理用户离开
 func (room *Room) handleLeave(client *Client) {
-	// TODO:增加事件广播
-
+	storage, ok := room.clients[client.participant.ID]
+	if !ok {
+		// 已经不存在
+		return
+	}
+	if storage != client {
+		// 不一致
+		return
+	}
+	// 提前保存数据, 防止client被remove后导致问题
+	participantInfo := dto.ParticipantInfo{
+		Nickname: client.participant.Nickname,
+		UUID:     client.participant.ID,
+	}
 	// removeClient只负责清理实例和连接
 	room.removeClient(client)
+	// 广播消息, 由于目标client已经被移除, 这里直接向全体广播即可
+	room.broadcast(dto.WSServerMessage{
+		Type: dto.EventParticipantLeft,
+		Data: participantInfo,
+	})
 }
 
 // 处理用户操作消息
@@ -141,7 +186,7 @@ func (room *Room) broadcastExcept(msg dto.WSServerMessage, client *Client) {
 }
 
 // 向指定的客户端广播消息
-func (room *Room) boardcastTo(msg dto.WSServerMessage, client *Client) bool {
+func (room *Room) broadcastTo(msg dto.WSServerMessage, client *Client) bool {
 	select {
 	case client.send <- msg:
 		// 正常发送
