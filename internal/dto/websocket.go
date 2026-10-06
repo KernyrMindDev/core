@@ -4,9 +4,19 @@ import "encoding/json"
 
 // 客户端上报消息
 type WSClientMessage struct {
-	Type string          `json:"type"`
-	Data json.RawMessage `json:"data,omitempty"`
+	Type WSClientMessageType `json:"type"`
+	Data json.RawMessage     `json:"data,omitempty"`
 }
+
+// 客户端消息类型枚举
+type WSClientMessageType string
+
+const (
+	EventCursorMoved   string = "cursor.move"    // 鼠标移动
+	EventObjectCreated string = "object.created" // 创建新节点
+	EventObjectUpdated string = "object.updated" // 更新节点属性
+	EventObjectDeleted string = "object.deleted" // 删除节点
+)
 
 // 服务端回传消息
 type WSServerMessage struct {
@@ -14,7 +24,7 @@ type WSServerMessage struct {
 	Data any    `json:"data,omitempty"`
 }
 
-// 消息类型枚举
+// 服务器消息类型枚举
 type WSServerMessageType string
 
 const (

@@ -1,10 +1,13 @@
 package service
 
 import (
+	"encoding/json"
+
 	"github.com/google/uuid"
 
 	"github.com/KernyrMindDev/core/internal/dto"
 	"github.com/KernyrMindDev/core/internal/model"
+	"github.com/KernyrMindDev/core/internal/objects"
 )
 
 type Room struct {
@@ -18,10 +21,12 @@ type Room struct {
 	leave chan *Client         // 用户离开
 	event chan ClientOperation // 用户操作事件
 	done  chan struct{}        // 关闭房间
+	// 组件构造工厂
+	objectFactory *objects.ObjectFactory
 }
 
 // 新建Room实例
-func NewRoom(boardID string) *Room {
+func NewRoom(boardID string, objectFactory *objects.ObjectFactory) *Room {
 	return &Room{
 		boardID: boardID,
 
@@ -33,6 +38,8 @@ func NewRoom(boardID string) *Room {
 		event: make(chan ClientOperation, 256), // 可能存在大量操作,提供缓冲
 
 		done: make(chan struct{}),
+
+		objectFactory: objectFactory,
 	}
 }
 
@@ -135,7 +142,12 @@ func (room *Room) handleLeave(client *Client) {
 
 // 处理用户操作消息
 func (room *Room) handleEvent(event ClientOperation) {
-	// TODO: 后续实现
+	switch event.Message.Type {
+	case dto.WSClientMessageType(dto.EventObjectCreated):
+
+	default:
+		// 未知事件
+	}
 }
 
 // 新用户加入
@@ -196,4 +208,16 @@ func (room *Room) broadcastTo(msg dto.WSServerMessage, client *Client) bool {
 		room.removeClient(client)
 		return false
 	}
+}
+
+// 新建节点对象
+func (room *Room) createObject(data json.RawMessage) {
+	var req dto.ObjectCreateRequest
+	// 解析请求体
+	err := json.Unmarshal(data, &req)
+	if err != nil {
+		// 解析失败
+		return
+	}
+
 }
