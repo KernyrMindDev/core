@@ -2,8 +2,7 @@ package service
 
 import (
 	"encoding/json"
-
-	"github.com/google/uuid"
+	"uuid"
 
 	"github.com/KernyrMindDev/core/internal/dto"
 	"github.com/KernyrMindDev/core/internal/model"
@@ -23,6 +22,8 @@ type Room struct {
 	done  chan struct{}        // 关闭房间
 	// 组件构造工厂
 	objectFactory *objects.ObjectFactory
+	// 房间状态存储
+	state *BoardState
 }
 
 // 新建Room实例
@@ -40,6 +41,7 @@ func NewRoom(boardID string, objectFactory *objects.ObjectFactory) *Room {
 		done: make(chan struct{}),
 
 		objectFactory: objectFactory,
+		state:         &BoardState{},
 	}
 }
 
@@ -143,8 +145,8 @@ func (room *Room) handleLeave(client *Client) {
 // 处理用户操作消息
 func (room *Room) handleEvent(event ClientOperation) {
 	switch event.Message.Type {
-	case dto.WSClientMessageType(dto.EventObjectCreated):
-
+	case dto.WSClientMessageType(dto.EventObjectCreate):
+		room.handleObjectCreate(event.Message.Data)
 	default:
 		// 未知事件
 	}
@@ -211,13 +213,31 @@ func (room *Room) broadcastTo(msg dto.WSServerMessage, client *Client) bool {
 }
 
 // 新建节点对象
-func (room *Room) createObject(data json.RawMessage) {
-	var req dto.ObjectCreateRequest
-	// 解析请求体
-	err := json.Unmarshal(data, &req)
-	if err != nil {
-		// 解析失败
+// func (room *Room) createObject(data json.RawMessage) {
+// 	var req dto.ObjectCreateRequest
+// 	// 解析请求体
+// 	err := json.Unmarshal(data, &req)
+// 	if err != nil {
+// 		// 解析失败
+// 		return
+// 	}
+// }
+
+// 处理创建对象的操作
+func (room *Room) handleObjectCreate(data json.RawMessage) {
+	// 数据解析
+	var d struct {
+		Type string          `json:"type"`
+		Data json.RawMessage `json:"data"`
+	}
+	if err := json.Unmarshal(data, &d); err != nil {
 		return
 	}
-
+	// 生成新对象
+	obj, err := room.objectFactory.Create(d.Type, uuid.New(), d.Data)
+	if err != nil {
+		return
+	}
+	// 存入内存
+	room.state.Set(obj)
 }
