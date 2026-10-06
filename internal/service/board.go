@@ -4,11 +4,12 @@ import (
 	"github.com/KernyrMindDev/core/internal/objects"
 )
 
+// BoardState不需要锁, BoardState的写入由Room的事件循环驱动, 而Room的事件循环则建立在channel上, 天然串行
+
 // 白板状态 内存存储
 type BoardState struct {
 	Objects map[string]objects.BoardObject // 节点对象
 	ID      string                         // 白板ID
-
 }
 
 // 实例化一个新的BoardState
@@ -19,4 +20,27 @@ func NewRoomState(boardID string) *BoardState {
 	}
 }
 
-func (board *BoardState) NewObject(id string, objectType string, data []byte)
+// 新建/替换
+func (board *BoardState) Set(object objects.BoardObject) {
+	id := object.ID()
+	board.Objects[id] = object
+}
+
+// 获取
+func (board *BoardState) Get(id string) (objects.BoardObject, bool) {
+	object, ok := board.Objects[id]
+	if ok {
+		return object, true
+	} else {
+		return nil, false
+	}
+}
+
+// 删除
+func (board *BoardState) Delete(id string) objects.BoardObject {
+	object, ok := board.Objects[id]
+	if !ok {
+		return nil
+	}
+	return object
+}
