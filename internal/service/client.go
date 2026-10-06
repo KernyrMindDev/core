@@ -8,23 +8,23 @@ import (
 
 // 每个连接的对象
 type Client struct {
-	conn        *websocket.Conn          // 实际连接
-	participant *model.Participant       // 用户对象
-	room        *Room                    // 房间对象
-	send        chan dto.WSServerMessage // 向客户端下发的消息通道
+	conn   *websocket.Conn          // 实际连接
+	member *model.Member            // 用户对象
+	room   *Room                    // 房间对象
+	send   chan dto.WSServerMessage // 向客户端下发的消息通道
 }
 
 // 实例化一个新的Clinet
 func NewClient(
 	conn *websocket.Conn,
-	participant *model.Participant,
+	member *model.Member,
 	room *Room,
 ) *Client {
 	return &Client{
-		conn:        conn,
-		participant: participant,
-		room:        room,
-		send:        make(chan dto.WSServerMessage, 64),
+		conn:   conn,
+		member: member,
+		room:   room,
+		send:   make(chan dto.WSServerMessage, 64),
 	}
 }
 

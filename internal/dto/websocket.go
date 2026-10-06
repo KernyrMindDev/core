@@ -28,7 +28,7 @@ type WSServerMessage struct {
 type WSServerMessageType string
 
 const (
-	EventParticipantJoined string = "participant.join"  // 新用户加入
-	EventParticipantLeft   string = "participant.leave" // 用户离开
-	EventParticipantsSync  string = "sync.participants" // 房间成员同步
+	EventMemberJoined string = "member.join"  // 新用户加入
+	EventMemberLeft   string = "member.leave" // 用户离开
+	EventMembersSync  string = "sync.members" // 房间成员同步
 )

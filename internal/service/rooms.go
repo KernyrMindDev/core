@@ -13,8 +13,8 @@ type Room struct {
 	// 白板ID, 从哪个白板加载和保存数据
 	boardID string
 	// 运行时存储
-	participants map[uuid.UUID]*model.Participant // 临时身份
-	clients      map[uuid.UUID]*Client            // 实际连接
+	members map[uuid.UUID]*model.Member // 临时身份
+	clients map[uuid.UUID]*Client       // 实际连接
 	// 消息通道
 	join  chan *Client         // 新用户加入
 	leave chan *Client         // 用户离开
@@ -31,8 +31,8 @@ func NewRoom(boardID string, objectFactory *objects.ObjectFactory) *Room {
 	return &Room{
 		boardID: boardID,
 
-		participants: make(map[uuid.UUID]*model.Participant),
-		clients:      make(map[uuid.UUID]*Client),
+		members: make(map[uuid.UUID]*model.Member),
+		clients: make(map[uuid.UUID]*Client),
 
 		join:  make(chan *Client),
 		leave: make(chan *Client),
@@ -47,15 +47,15 @@ func NewRoom(boardID string, objectFactory *objects.ObjectFactory) *Room {
 
 // 移除客户端并关闭连接
 func (room *Room) removeClient(client *Client) {
-	participantID := client.participant.ID
+	memberID := client.member.ID
 	// 判断Client是否存在并校验一致性
-	current, ok := room.clients[participantID]
+	current, ok := room.clients[memberID]
 	if !ok || current != client {
 		return
 	}
 	// 从储存中删除
-	delete(room.clients, participantID)
-	delete(room.participants, participantID)
+	delete(room.clients, memberID)
+	delete(room.members, memberID)
 	// 关闭通道后交给WriteLoop依次向下关闭各个连接
 	close(client.send)
 }
@@ -83,24 +83,24 @@ func (room *Room) Run() {
 // 处理用户加入
 func (room *Room) handleJoin(client *Client) {
 	// 获取用户房间内UUID
-	id := client.participant.ID
+	id := client.member.ID
 	// 通道确保了一次只有一个, 无需加锁
-	room.participants[id] = client.participant
+	room.members[id] = client.member
 	room.clients[id] = client
 	// 扫描当前房间内用户, 构造用户列表
-	var participants dto.ParticipantList
-	for uuid, participant := range room.participants {
-		var participant dto.ParticipantInfo = dto.ParticipantInfo{
-			Nickname: participant.Nickname,
+	var members dto.MemberList
+	for uuid, member := range room.members {
+		var member dto.MemberInfo = dto.MemberInfo{
+			Nickname: member.Nickname,
 			UUID:     uuid,
 		}
 		// TODO: 目前遍历顺序打乱, 可能需要追加排序
-		participants.Participants = append(participants.Participants, participant)
+		members.Members = append(members.Members, member)
 	}
 	// 将用户列表发给新加入的Client
 	ok := room.broadcastTo(dto.WSServerMessage{
-		Type: dto.EventParticipantsSync,
-		Data: participants,
+		Type: dto.EventMembersSync,
+		Data: members,
 	}, client)
 	if !ok {
 		// 新Client无法接收消息, 不再向原有客户端广播消息
@@ -109,17 +109,17 @@ func (room *Room) handleJoin(client *Client) {
 	}
 	// 向其他客户端广播新Client加入的消息
 	room.broadcastExcept(dto.WSServerMessage{
-		Type: dto.EventParticipantJoined,
-		Data: dto.ParticipantInfo{
-			Nickname: client.participant.Nickname,
-			UUID:     client.participant.ID,
+		Type: dto.EventMemberJoined,
+		Data: dto.MemberInfo{
+			Nickname: client.member.Nickname,
+			UUID:     client.member.ID,
 		},
 	}, client)
 }
 
 // 处理用户离开
 func (room *Room) handleLeave(client *Client) {
-	storage, ok := room.clients[client.participant.ID]
+	storage, ok := room.clients[client.member.ID]
 	if !ok {
 		// 已经不存在
 		return
@@ -129,16 +129,16 @@ func (room *Room) handleLeave(client *Client) {
 		return
 	}
 	// 提前保存数据, 防止client被remove后导致问题
-	participantInfo := dto.ParticipantInfo{
-		Nickname: client.participant.Nickname,
-		UUID:     client.participant.ID,
+	memberInfo := dto.MemberInfo{
+		Nickname: client.member.Nickname,
+		UUID:     client.member.ID,
 	}
 	// removeClient只负责清理实例和连接
 	room.removeClient(client)
 	// 广播消息, 由于目标client已经被移除, 这里直接向全体广播即可
 	room.broadcast(dto.WSServerMessage{
-		Type: dto.EventParticipantLeft,
-		Data: participantInfo,
+		Type: dto.EventMemberLeft,
+		Data: memberInfo,
 	})
 }
 
