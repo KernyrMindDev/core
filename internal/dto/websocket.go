@@ -13,7 +13,7 @@ type WSClientMessageType string
 
 const (
 	EventCursorMoved   string = "cursor.move"    // 鼠标移动
-	EventObjectCreated string = "object.created" // 创建新节点
+	EventObjectCreate  string = "object.create"  // 创建新节点
 	EventObjectUpdated string = "object.updated" // 更新节点属性
 	EventObjectDeleted string = "object.deleted" // 删除节点
 )

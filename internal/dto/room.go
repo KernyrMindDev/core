@@ -1,6 +1,6 @@
 package dto
 
-import "github.com/google/uuid"
+import "uuid"
 
 // 单个成员信息
 type ParticipantInfo struct {

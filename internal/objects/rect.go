@@ -2,12 +2,13 @@ package objects
 
 import (
 	"encoding/json"
+	"uuid"
 
 	"github.com/KernyrMindDev/core/internal/dto"
 )
 
 type RectObject struct {
-	id string
+	id uuid.UUID
 
 	Point
 	Size
@@ -25,7 +26,7 @@ type RectDTO struct {
 	Size  Size  `json:"size"`
 }
 
-func (o *RectObject) ID() string {
+func (o *RectObject) ID() uuid.UUID {
 	return o.id
 }
 
@@ -59,6 +60,6 @@ func (o *RectObject) ToDTO() dto.ObjectDTO {
 var _ BoardObject = &RectObject{}
 
 // 工厂函数
-func NewRectObject(id string, data []byte) (BoardObject, error) {
+func NewRectObject(id uuid.UUID, data []byte) (BoardObject, error) {
 	return nil, nil
 }

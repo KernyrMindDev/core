@@ -1,6 +1,8 @@
 package service
 
 import (
+	"uuid"
+
 	"github.com/KernyrMindDev/core/internal/objects"
 )
 
@@ -8,15 +10,15 @@ import (
 
 // 白板状态 内存存储
 type BoardState struct {
-	Objects map[string]objects.BoardObject // 节点对象
-	ID      string                         // 白板ID
+	Objects map[uuid.UUID]objects.BoardObject // 节点对象
+	ID      string                            // 白板ID
 }
 
 // 实例化一个新的BoardState
 func NewRoomState(boardID string) *BoardState {
 	return &BoardState{
-		Objects: make(map[string]objects.BoardObject), // TODO: 增加数据库查询
-		ID:      boardID,                              // 白板ID
+		Objects: make(map[uuid.UUID]objects.BoardObject), // TODO: 增加数据库查询
+		ID:      boardID,                                 // 白板ID
 	}
 }
 
@@ -27,7 +29,7 @@ func (board *BoardState) Set(object objects.BoardObject) {
 }
 
 // 获取
-func (board *BoardState) Get(id string) objects.BoardObject {
+func (board *BoardState) Get(id uuid.UUID) objects.BoardObject {
 	object, ok := board.Objects[id]
 	if !ok {
 		return nil
@@ -36,7 +38,7 @@ func (board *BoardState) Get(id string) objects.BoardObject {
 }
 
 // 删除
-func (board *BoardState) Delete(id string) objects.BoardObject {
+func (board *BoardState) Delete(id uuid.UUID) objects.BoardObject {
 	object, ok := board.Objects[id]
 	if !ok {
 		return nil

@@ -3,7 +3,8 @@ package model
 import (
 	"time"
 
-	"github.com/google/uuid"
+	"uuid"
+
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
@@ -37,7 +38,7 @@ func (u *User) CheckPassword(plainPassword string) bool {
 // 自动生成UUID的钩子
 func (u *User) BeforeCreate(tx *gorm.DB) error {
 	if u.ID == "" {
-		u.ID = uuid.NewString()
+		u.ID = uuid.New().String()
 	}
 	if u.CreatedAt.IsZero() {
 		u.CreatedAt = time.Now()

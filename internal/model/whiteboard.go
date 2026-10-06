@@ -3,7 +3,8 @@ package model
 import (
 	"time"
 
-	"github.com/google/uuid"
+	"uuid"
+
 	"gorm.io/gorm"
 )
 
@@ -18,7 +19,7 @@ type Board struct {
 
 func (b *Board) BeforeCreate(tx *gorm.DB) error {
 	if b.ID == "" {
-		b.ID = uuid.NewString()
+		b.ID = uuid.New().String()
 	}
 	return nil
 }

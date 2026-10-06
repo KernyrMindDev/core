@@ -1,6 +1,10 @@
 package objects
 
-import "github.com/KernyrMindDev/core/internal/apperr"
+import (
+	"uuid"
+
+	"github.com/KernyrMindDev/core/internal/apperr"
+)
 
 // 组件构造器
 type ObjectFactory struct {
@@ -21,12 +25,12 @@ func NewObjectFactory() *ObjectFactory {
 
 // 一个节点的工厂函数
 type ObjectCreator func(
-	id string,
+	id uuid.UUID,
 	data []byte,
 ) (BoardObject, error)
 
 // 根据传入的Type, ID及data实例化一个BoardObject
-func (o *ObjectFactory) Create(typ string, id string, data []byte) (BoardObject, error) {
+func (o *ObjectFactory) Create(typ string, id uuid.UUID, data []byte) (BoardObject, error) {
 	// 尝试获取工厂函数
 	creator, ok := o.creators[typ]
 	if !ok {
