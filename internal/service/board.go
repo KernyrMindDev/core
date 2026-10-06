@@ -43,5 +43,6 @@ func (board *BoardState) Delete(id uuid.UUID) objects.BoardObject {
 	if !ok {
 		return nil
 	}
+	delete(board.Objects, id)
 	return object
 }
