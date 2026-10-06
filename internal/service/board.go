@@ -27,13 +27,12 @@ func (board *BoardState) Set(object objects.BoardObject) {
 }
 
 // 获取
-func (board *BoardState) Get(id string) (objects.BoardObject, bool) {
+func (board *BoardState) Get(id string) objects.BoardObject {
 	object, ok := board.Objects[id]
-	if ok {
-		return object, true
-	} else {
-		return nil, false
+	if !ok {
+		return nil
 	}
+	return object
 }
 
 // 删除
