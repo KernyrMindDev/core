@@ -34,15 +34,25 @@ func InitJWTKey(db *gorm.DB) {
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		log.Println("未找到密钥，正在生成...")
 
-		randomBytes, _ := generateRandomKey(32)
+		randomBytes, err := generateRandomKey(32)
+		if err != nil {
+			log.Fatalf("生产随机密钥失败, 请检查系统环境: %v", err)
+		}
 		config.Value = base64.StdEncoding.EncodeToString(randomBytes)
 
 		// 插入数据库
-		db.Create(&config)
+		err = db.Create(&config).Error
+		if err != nil {
+			log.Fatalf("向数据库插入JWT密钥失败: %v", err)
+		}
 		jwtKey = randomBytes
 	} else {
 		// 找到记录，直接解码
 		decodedKey, _ := base64.StdEncoding.DecodeString(config.Value)
+		if len(decodedKey) == 0 {
+			// 空密钥, 直接退出程序
+			log.Fatalf("从数据库获取到空JWT密钥, 请检查数据库是否正常")
+		}
 		jwtKey = decodedKey
 	}
 }
@@ -77,7 +87,7 @@ func GenerateToken(uid string) (string, error) {
 // ParseToken 解析并验证 JWT Token
 func ParseToken(tokenString string) (*model.JwtClaims, error) {
 	// 解析 Token
-	token, err := jwt.ParseWithClaims(tokenString, &model.JwtClaims{}, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &model.JwtClaims{}, func(token *jwt.Token) (any, error) {
 		// 验证签名算法是否为 HS256
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, errors.New("错误的签名算法")
